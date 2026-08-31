@@ -242,9 +242,39 @@ def test_todo_item_from_shopping_list_product() -> None:
     item = GrocyTodoItem(slp, ATTR_SHOPPING_LIST)
 
     assert item.uid == "40"
-    assert "1.00x Bread" in item.summary
+    assert "1.00 Bread" in item.summary
     assert item.status == TodoItemStatus.NEEDS_ACTION
     assert item.description == "Sourdough"
+
+
+@pytest.mark.feature("shopping_list")
+def test_todo_item_from_shopping_list_product_with_unit() -> None:
+    """Verify shopping list item includes unit."""
+    product = _make_product("Kochsahne 12%")
+    product.qu = SimpleNamespace(name="ML")
+    slp = ShoppingListProduct(
+        id=40, amount=200.0, note=None, product=product, done=False
+    )
+    item = GrocyTodoItem(slp, ATTR_SHOPPING_LIST)
+
+    assert item.uid == "40"
+    assert item.summary == "200.00 ML Kochsahne 12%"
+    assert item.status == TodoItemStatus.NEEDS_ACTION
+    assert item.description is None
+
+
+@pytest.mark.feature("shopping_list")
+def test_todo_item_from_shopping_list_product_no_unit() -> None:
+    """Verify shopping list item without unit displays correctly."""
+    product = _make_product("Bread")
+    product.qu = None
+    slp = ShoppingListProduct(
+        id=41, amount=1.0, note=None, product=product, done=False
+    )
+    item = GrocyTodoItem(slp, ATTR_SHOPPING_LIST)
+
+    assert item.summary == "1.00 Bread"
+    assert item.status == TodoItemStatus.NEEDS_ACTION
 
 
 @pytest.mark.feature("shopping_list")
@@ -633,7 +663,7 @@ async def test_async_delete_todo_items_calls_delete_for_each_uid() -> None:
     assert mock_delete.await_count == 3
 
 
-# ─── _get_grocy_item ─────────────────────────────────────────────────────────
+# ─── _get_grocy_item ───────────────────────────────────────────────────────
 
 
 @pytest.mark.feature("cross_cutting")
