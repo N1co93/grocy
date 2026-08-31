@@ -134,9 +134,13 @@ class DummyCurrentStockResponse:
 @dataclass
 class DummyShoppingProduct:
     name: str = "Listed product"
+    qu: SimpleNamespace | None = field(default_factory=lambda: SimpleNamespace(name=""))
 
     def as_dict(self) -> dict[str, Any]:
-        return {"name": self.name}
+        return {
+            "name": self.name,
+            "qu": {"name": self.qu.name} if self.qu else None,
+        }
 
 
 @dataclass
