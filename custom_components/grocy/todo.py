@@ -240,9 +240,15 @@ class GrocyTodoItem(TodoItem):
         elif isinstance(item, ShoppingListProduct):
             amount = item.amount or 0
             product_name = item.product.name if item.product else "Unknown product"
+            unit = (
+                item.product.qu.name
+                if (item.product and getattr(item.product, "qu", None))
+                else ""
+            )
+            summary = f"{amount:.2f} {unit} {product_name}".strip()
             super().__init__(
                 uid=item.id.__str__(),
-                summary=f"{amount:.2f}x {product_name}",
+                summary=summary,
                 due=None,
                 status=TodoItemStatus.COMPLETED
                 if item.done
