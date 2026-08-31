@@ -239,21 +239,30 @@ class GrocyTodoItem(TodoItem):
             )
         elif isinstance(item, ShoppingListProduct):
             amount = item.amount or 0
+            #removes decimal places
+            amount_str = f"{amount:.2f}".rstrip('0').rstrip('.')
+            
             product_name = item.product.name if item.product else "Unknown product"
-            unit = (
-                item.product.qu.name
-                if (item.product and getattr(item.product, "qu", None))
-                else ""
-            )
-            summary = f"{amount:.2f} {unit} {product_name}".strip()
-            super().__init__(
-                uid=item.id.__str__(),
-                summary=summary,
-                due=None,
-                status=TodoItemStatus.COMPLETED
-                if item.done
-                else TodoItemStatus.NEEDS_ACTION,
-                description=item.note or None,
+            
+            # get quantity
+            qu_obj = getattr(item.product, "default_quantity_unit_purchase", None) if item.product else None
+            # decides if quantity is plural
+            if qu_obj:
+                is_plural = amount > 1
+                unit = (qu_obj.name_plural if is_plural and qu_obj.name_plural else qu_obj.name) or ""
+            else:
+                unit = ""
+        
+            unit_str = f" {unit}" if unit else ""
+            summary = f"{amount_str}{unit_str} {product_name}".strip()
+
+    super().__init__(
+        uid=str(item.id),
+        summary=summary,
+        due=None,
+        status=TodoItemStatus.COMPLETED if item.done else TodoItemStatus.NEEDS_ACTION,
+        description=item.note or None,
+    )
             )
         elif isinstance(item, Task):
             due = item.due_date
