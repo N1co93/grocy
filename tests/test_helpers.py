@@ -1,4 +1,5 @@
-"""Helper function tests.
+"""
+Helper function tests.
 
 Features: meal_planning, cross_cutting
 See: docs/FEATURES.md
@@ -8,16 +9,21 @@ from __future__ import annotations
 
 import base64
 import datetime as dt
+import json
 import warnings
 
 import pytest
+from grocy.data_models.meal_items import MealPlanItem, MealPlanItemType
+from grocy.grocy_api_client import MealPlanResponse
 from pydantic import BaseModel
 
 from custom_components.grocy.helpers import (
     MealPlanItemWrapper,
     extract_base_url_and_path,
     model_to_dict,
+    split_url_and_port,
 )
+from custom_components.grocy.json_encoder import CustomJSONEncoder
 from tests.factories import (
     DummyMealPlanItem,
     DummyRecipe,
@@ -34,6 +40,23 @@ def test_extract_base_url_and_path_variants() -> None:
     base, path = extract_base_url_and_path("https://demo.grocy.info/grocy/api/")
     assert base == "https://demo.grocy.info"
     assert path == "grocy/api"
+
+
+@pytest.mark.feature("cross_cutting")
+@pytest.mark.parametrize(
+    ("url", "port", "expected"),
+    [
+        ("http://192.168.1.10", 9192, ("http://192.168.1.10", 9192)),
+        ("http://192.168.1.10:9283", 9192, ("http://192.168.1.10", 9283)),
+        ("https://grocy.local:8443/grocy", 9192, ("https://grocy.local/grocy", 8443)),
+        ("http://[::1]:9283", 9192, ("http://[::1]", 9283)),
+        ("http://user:pw@grocy.local:9283", 9192, ("http://user:pw@grocy.local", 9283)),
+        ("http://grocy.local:abc", 9192, ("http://grocy.local:abc", 9192)),
+    ],
+)
+def test_split_url_and_port(url: str, port: int, expected: tuple[str, int]) -> None:
+    """A port inside the URL wins over the port field; otherwise nothing changes."""
+    assert split_url_and_port(url, port) == expected
 
 
 @pytest.mark.feature("meal_planning")
@@ -60,6 +83,27 @@ def test_meal_plan_item_wrapper_handles_missing_picture() -> None:
     wrapper = MealPlanItemWrapper(item)
 
     assert wrapper.picture_url is None
+
+
+@pytest.mark.feature("meal_planning")
+@pytest.mark.parametrize(
+    "type_value", [*(member.value for member in MealPlanItemType), "dessert"]
+)
+def test_meal_plan_item_wrapper_serializes_every_type(type_value: str) -> None:
+    """Enum types and unknown string types both reach the sensor attributes (#69)."""
+    item = MealPlanItem.from_response(
+        MealPlanResponse(
+            id=7,
+            day="2026-10-03 00:00:00",
+            type=type_value,
+            row_created_timestamp="2026-10-01 12:00:00",
+        )
+    )
+
+    payload = MealPlanItemWrapper(item).as_dict()
+
+    assert payload["type"] == type_value
+    assert json.loads(json.dumps(payload, cls=CustomJSONEncoder))["type"] == type_value
 
 
 class WithAsDict:
@@ -116,7 +160,8 @@ class _UserfieldModel(BaseModel):
 
 @pytest.mark.feature("cross_cutting")
 def test_model_to_dict_suppresses_userfields_warning() -> None:
-    """Verify model_to_dict does not emit PydanticSerializationUnexpectedValue.
+    """
+    Verify model_to_dict does not emit PydanticSerializationUnexpectedValue.
 
     The Grocy API returns [] for empty userfields. grocy-py assigns this
     directly to the Pydantic model attribute, bypassing validation.

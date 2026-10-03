@@ -17,7 +17,7 @@ from homeassistant.components.todo import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryConfigEntryEntitiesCallback
 
 from grocy.data_models.battery import Battery
 from grocy.data_models.chore import Chore

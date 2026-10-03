@@ -187,6 +187,7 @@ features:
           - test_todo_item_from_meal_plan_item
           - test_todo_item_from_meal_plan_item_wrapper
           - test_todo_item_from_meal_plan_item_missing_recipe
+          - test_todo_item_from_meal_plan_item_any_type
           - test_async_update_todo_item_complete_meal_plan
           - test_async_update_todo_item_meal_plan_needs_action_raises
       - file: tests/test_grocy_data.py
@@ -198,6 +199,7 @@ features:
         functions:
           - test_meal_plan_item_wrapper_generates_picture_url
           - test_meal_plan_item_wrapper_handles_missing_picture
+          - test_meal_plan_item_wrapper_serializes_every_type
 
   calendar:
     name: Calendar
@@ -216,6 +218,8 @@ features:
           - test_event_property_returns_next_event
           - test_event_property_returns_none_when_no_events
           - test_http_error_handling
+          - test_ical_fetch_sends_api_key_and_verify_ssl
+          - test_ical_fetch_verifies_ssl_when_configured
           - test_daylight_saving_time_transition
           - test_different_timezone_pacific
           - test_fix_timezone_defaults_to_true
@@ -277,6 +281,16 @@ features:
           - test_reauth_confirm_handles_error
           - test_migrate_entry_v1_adds_calendar_defaults
           - test_migrate_entry_v2_is_left_alone
+          - test_migrate_entry_v2_1_moves_port_from_url
+          - test_user_step_moves_port_from_url
+          - test_user_step_maps_each_failure_to_its_message
+          - test_html_error_page_maps_to_cannot_connect
+          - test_user_step_rejects_ingress_url
+          - test_user_step_accepts_normal_subpath
+          - test_options_step_shows_form
+          - test_options_step_shows_connection_error
+          - test_options_step_rejects_ingress_url
+          - test_options_step_saves_and_reloads
       - file: tests/test_init.py
         functions:
           - test_async_setup_entry_initializes_integration
@@ -347,6 +361,7 @@ cross_cutting:
     - file: tests/test_helpers.py
       functions:
         - test_extract_base_url_and_path_variants
+        - test_split_url_and_port
         - test_model_to_dict_prefers_as_dict
         - test_model_to_dict_falls_back_to_model_dump
         - test_model_to_dict_uses_dunder_dict
