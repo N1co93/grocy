@@ -259,7 +259,11 @@ class GrocyTodoItem(TodoItem):
                 uid=str(item.id),
                 summary=summary,
                 due=None,
-                status=TodoItemStatus.COMPLETED if getattr(item, "done", False) else TodoItemStatus.NEEDS_ACTION,
+                status=(
+                    TodoItemStatus.COMPLETED
+                    if getattr(item, "done", False)
+                    else TodoItemStatus.NEEDS_ACTION
+                ),
                 description=getattr(item, "note", None),
             )
         elif isinstance(item, Task):
